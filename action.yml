@@ -1,0 +1,66 @@
+name: 'Create nginx reverse proxy config'
+description: 'Create nginx reverse proxy config'
+author: 'Alexey Savelyev'
+inputs:
+    directory:
+        description: 'Target directory'
+        required: true
+    filename:
+        description: 'Target file name'
+        required: true
+    domain_name:
+        description: 'Service domain name'
+        required: true
+    server_local_ip:
+        description: 'Service IP in local network'
+        required: true
+    service_port:
+        description: 'Service port in local network'
+        required: true
+
+runs:
+    using: 'composite'
+    steps:
+        -   name: Check existing nginx reverse-proxy config
+            run: |
+                if test -f ${{inputs.directory}}/${{inputs.filename}}
+                then
+                    echo "LOCAL_CONFIG_IS_EXIST=true" >> ${GITHUB_ENV}
+                else
+                    echo "LOCAL_CONFIG_IS_EXIST=false" >> ${GITHUB_ENV}
+                fi
+
+        -   name: Delete old nginx reverse-proxy config
+            if: ${{env.LOCAL_CONFIG_IS_EXIST == 'true'}}
+            run : |
+                cd ${{inputs.directory}}
+                [ -e ./${{inputs.filename}} ] && sudo rm -rf ./${{inputs.filename}}
+
+        -   name: Create config directory
+            if: ${{env.LOCAL_CONFIG_IS_EXIST == 'false'}}
+            run : |
+                mkdir -p ${{inputs.directory}}
+
+        -   name: Create new nginx reverse-proxy config
+            run : |
+                cd ${{inputs.directory}}
+                touch ./${{inputs.filename}}
+                echo "scrape_configs:" >> ./${{inputs.filename}}
+                echo "  - job_name: \"${{inputs.domain_name}}\"" >> ./${{inputs.filename}}
+                echo "    scrape_interval: 10s" >> ./${{inputs.filename}}
+                echo "    static_configs:" >> ./${{inputs.filename}}
+                echo "      - targets: [\"${{inputs.server_local_ip}}:${{inputs.service_port}}\"]" >> ./${{inputs.filename}}
+
+        -   name: Create new nginx reverse-proxy config
+            run : |
+                cd ${{inputs.directory}}
+                touch ./${{inputs.filename}}
+                echo "server {" >> ./${{inputs.filename}}
+                echo "    listen 80;" >> ./${{inputs.filename}}
+                echo "" >> ./${{inputs.filename}}
+                echo "    server_name ${{inputs.domain_name}};" >> ./${{inputs.filename}}
+                echo "" >> ./${{inputs.filename}}
+                echo "    location / {" >> ./${{inputs.filename}}
+                echo "        proxy_pass http://${{inputs.server_local_ip}}:${{inputs.service_port}};" >> ./${{inputs.filename}}
+                echo "    }" >> ./${{inputs.filename}}
+                echo "}" >> ./${{inputs.filename}}
