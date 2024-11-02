@@ -45,8 +45,7 @@ runs:
                 mkdir -p ${{inputs.directory}}
 
         -   name: Create new nginx reverse-proxy config
-            
-            shell: bash: bash
+            shell: bash
             run : |
                 cd ${{inputs.directory}}
                 touch ./${{inputs.filename}}
