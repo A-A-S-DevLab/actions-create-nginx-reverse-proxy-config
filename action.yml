@@ -22,6 +22,7 @@ runs:
     using: 'composite'
     steps:
         -   name: Check existing nginx reverse-proxy config
+            shell: bash
             run: |
                 if test -f ${{inputs.directory}}/${{inputs.filename}}
                 then
@@ -31,27 +32,21 @@ runs:
                 fi
 
         -   name: Delete old nginx reverse-proxy config
+            shell: bash
             if: ${{env.LOCAL_CONFIG_IS_EXIST == 'true'}}
             run : |
                 cd ${{inputs.directory}}
                 [ -e ./${{inputs.filename}} ] && sudo rm -rf ./${{inputs.filename}}
 
         -   name: Create config directory
+            shell: bash
             if: ${{env.LOCAL_CONFIG_IS_EXIST == 'false'}}
             run : |
                 mkdir -p ${{inputs.directory}}
 
         -   name: Create new nginx reverse-proxy config
-            run : |
-                cd ${{inputs.directory}}
-                touch ./${{inputs.filename}}
-                echo "scrape_configs:" >> ./${{inputs.filename}}
-                echo "  - job_name: \"${{inputs.domain_name}}\"" >> ./${{inputs.filename}}
-                echo "    scrape_interval: 10s" >> ./${{inputs.filename}}
-                echo "    static_configs:" >> ./${{inputs.filename}}
-                echo "      - targets: [\"${{inputs.server_local_ip}}:${{inputs.service_port}}\"]" >> ./${{inputs.filename}}
-
-        -   name: Create new nginx reverse-proxy config
+            
+            shell: bash: bash
             run : |
                 cd ${{inputs.directory}}
                 touch ./${{inputs.filename}}
