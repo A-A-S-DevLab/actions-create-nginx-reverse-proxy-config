@@ -16,7 +16,7 @@ inputs:
         required: true
     service_port:
         description: 'Service port in local network'
-        required: true
+        required: false
 
 runs:
     using: 'composite'
@@ -44,6 +44,16 @@ runs:
             run : |
                 mkdir -p ${{inputs.directory}}
 
+        -   name: Create port line
+            shell: bash
+            run : |
+                if [ "${{inputs.service_port}}" != '' ]
+                then
+                    echo "SERVICE_PORT_LINE=:${{inputs.service_port}}" >> ${GITHUB_ENV}
+                else
+                    echo "SERVICE_PORT_LINE=" >> ${GITHUB_ENV}
+                fi
+
         -   name: Create new nginx reverse-proxy config
             shell: bash
             run : |
@@ -55,6 +65,6 @@ runs:
                 echo "    server_name ${{inputs.domain_name}};" >> ./${{inputs.filename}}
                 echo "" >> ./${{inputs.filename}}
                 echo "    location / {" >> ./${{inputs.filename}}
-                echo "        proxy_pass http://${{inputs.server_local_ip}}:${{inputs.service_port}};" >> ./${{inputs.filename}}
+                echo "        proxy_pass http://${{inputs.server_local_ip}}${{env.SERVICE_PORT_LINE}};" >> ./${{inputs.filename}}
                 echo "    }" >> ./${{inputs.filename}}
                 echo "}" >> ./${{inputs.filename}}
