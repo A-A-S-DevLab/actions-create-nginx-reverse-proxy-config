@@ -66,5 +66,6 @@ runs:
                 echo "" >> ./${{inputs.filename}}
                 echo "    location / {" >> ./${{inputs.filename}}
                 echo "        proxy_pass http://${{inputs.server_local_ip}}${{env.SERVICE_PORT_LINE}};" >> ./${{inputs.filename}}
+                echo "        proxy_set_header  Host $host;" >> ./${{inputs.filename}}
                 echo "    }" >> ./${{inputs.filename}}
                 echo "}" >> ./${{inputs.filename}}
